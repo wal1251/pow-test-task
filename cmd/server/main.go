@@ -6,8 +6,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"wisdom-server/config"
 	"wisdom-server/internal/app"
+	"wisdom-server/internal/config"
 	"github.com/rs/zerolog"
 )
 

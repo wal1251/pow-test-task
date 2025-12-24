@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"wisdom-server/config"
+	"wisdom-server/internal/config"
 	"wisdom-server/internal/app"
 	"wisdom-server/internal/client"
 	"wisdom-server/internal/controller/tcp"

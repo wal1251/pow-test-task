@@ -1,6 +1,95 @@
-Test task for Server Engineer
-Design and implement “Word of Wisdom” tcp server.
- • TCP server should be protected from DDOS attacks with the Proof of Work (https://en.wikipedia.org/wiki/Proof_of_work), the challenge-response protocol should be used.
- • The choice of the POW algorithm should be explained.
- • After Proof Of Work verification, server should send one of the quotes from “word of wisdom” book or any other collection of the quotes.
- • Docker file should be provided both for the server and for the client that solves the POW challenge
+# TCP PoW Server - "Word of Wisdom"
+
+TCP сервер с защитой от DDoS атак через Proof of Work, возвращающий цитаты после успешного решения challenge.
+
+## Архитектура
+
+```
+tcp-pow-server/
+├── cmd/
+│   ├── server/          # Точка входа сервера
+│   └── client/          # Точка входа клиента
+├── internal/
+│   ├── app/             # Бизнес-логика приложения
+│   ├── client/          # Клиентская логика
+│   ├── config/          # Конфигурация
+│   ├── controller/tcp/  # TCP обработчики и протокол
+│   ├── entity/          # Доменные сущности (PoW, Challenge, Quote)
+│   ├── repository/      # Хранилище цитат, кэш, rate limiter
+│   ├── tests/           # Интеграционные тесты
+│   └── usecase/         # Use cases (сервисы)
+├── docker/              # Dockerfile'ы
+│   ├── Dockerfile.server
+│   └── Dockerfile.client
+├── pkg/                 # Публичные библиотеки
+└── docker-compose.yml
+```
+
+## Алгоритм PoW
+
+Используется **Hashcash** (SHA-256) - проверенный алгоритм, требующий подбора nonce для получения хэша с N начальными нулями.
+
+**Почему Hashcash:**
+- Простая верификация (одна SHA-256 операция)
+- Настраиваемая сложность через количество нулей
+- Асимметричность: сложно вычислить, легко проверить
+- Эффективная защита от DDoS
+
+## Быстрый старт
+
+### С Docker Compose (рекомендуется)
+
+```bash
+# Запуск сервера и клиента
+docker-compose up --build
+
+# Только сервер
+docker-compose up --build server
+
+# Масштабирование клиентов
+docker-compose up --build --scale client=3
+```
+
+### Локальный запуск
+
+```bash
+# Установка зависимостей
+go mod download
+
+# Запуск сервера
+go run cmd/server/main.go
+
+# Запуск клиента (в другом терминале)
+go run cmd/client/main.go
+```
+
+## Конфигурация
+
+Переменные окружения:
+
+| Переменная | Описание | По умолчанию |
+|-----------|----------|--------------|
+| `SERVER_ADDR` | Адрес сервера | `:8080` |
+| `POW_DIFFICULTY` | Сложность PoW (кол-во нулей) | `20` |
+
+## Как это работает
+
+1. Клиент подключается к серверу
+2. Сервер отправляет challenge (случайная строка + сложность)
+3. Клиент решает PoW задачу (подбирает nonce)
+4. Клиент отправляет решение
+5. Сервер верифицирует решение
+6. При успехе - сервер отправляет случайную цитату
+
+## Тестирование
+
+```bash
+# Юнит-тесты
+go test ./...
+
+# Интеграционные тесты
+go test ./internal/tests -v
+
+# С coverage
+go test ./... -cover
+```

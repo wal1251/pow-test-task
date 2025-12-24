@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"wisdom-server/config"
+	"wisdom-server/internal/config"
 	"wisdom-server/internal/controller/tcp"
 	"wisdom-server/pkg/hasher"
 	"github.com/rs/zerolog"
