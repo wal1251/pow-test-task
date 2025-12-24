@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.server
+    container_name: tcp-pow-server
+    ports:
+      - "8080:8080"
+    environment:
+      - SERVER_ADDR=:8080
+      - POW_DIFFICULTY=20
+    restart: unless-stopped
+    networks:
+      - pow-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  client:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.client
+    container_name: tcp-pow-client
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      - SERVER_ADDR=server:8080
+    restart: on-failure
+    networks:
+      - pow-network
+
+networks:
+  pow-network:
+    driver: bridge
